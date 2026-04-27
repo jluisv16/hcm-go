@@ -1,7 +1,7 @@
 # hcm-go
 
 Microservicio base en **Go + Gin** para practicar ingeniería de software y DevOps sobre un caso de negocio real: **mantenimiento de empleados**.  
-El proyecto usa **DDD + Arquitectura Hexagonal**, pruebas, contenedores, pipeline de CI, manifiestos de Kubernetes y observabilidad con Prometheus.
+El proyecto usa **DDD + Arquitectura Hexagonal**, pruebas, contenedores, pipeline de CI, manifiestos de Kubernetes y observabilidad con Prometheus + Grafana.
 
 ## Objetivo del repositorio
 
@@ -60,9 +60,10 @@ El módulo de empleados está organizado por responsabilidades:
 - `internal/employees/...`: dominio, aplicación, infraestructura y handlers del módulo.
 - `.github/workflows/ci.yml`: pipeline de integración continua.
 - `Dockerfile`: imagen de producción con multi-stage build.
-- `docker-compose.yml`: stack local de app + Prometheus.
+- `docker-compose.yml`: stack local de app + Prometheus + Grafana.
 - `deploy/k8s`: manifiestos base de Deployment y Service.
 - `deploy/prometheus/prometheus.yml`: configuración de scrape para entorno local.
+- `deploy/grafana`: provisioning de datasource + dashboard para observabilidad local.
 
 ## Modelo de datos: Employee
 
@@ -132,7 +133,7 @@ make test
 make build
 ```
 
-### 3) Con Docker Compose (app + Prometheus)
+### 3) Con Docker Compose (app + Prometheus + Grafana)
 
 ```bash
 make compose-up
@@ -142,6 +143,7 @@ Servicios disponibles:
 
 - App: `http://localhost:8080`
 - Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000` (credenciales por defecto: `admin` / `admin`)
 
 Para detener:
 
@@ -156,8 +158,9 @@ El workflow de `ci` ejecuta:
 1. `go mod download`
 2. Revisión de formato con `gofmt`
 3. `go vet ./...`
-4. `go test ./...`
-5. `go build ./cmd/api`
+4. `go test ./... -coverprofile=coverage.out`
+5. Validación de cobertura mínima (actual: **10%**)
+6. `go build ./cmd/api`
 
 ## Guía práctica DevOps (paso a paso)
 
@@ -197,7 +200,7 @@ Esta sección propone una ruta de práctica realista para entrenar habilidades D
 
 **Qué practicas aquí:** build reproducible, runtime seguro, empaquetado para despliegue.
 
-### Fase 4: Observabilidad base con Prometheus
+### Fase 4: Observabilidad base con Prometheus + Grafana
 
 1. Levanta stack:
    - `make compose-up`
@@ -207,15 +210,17 @@ Esta sección propone una ruta de práctica realista para entrenar habilidades D
    - `up`
    - `go_goroutines`
    - `process_resident_memory_bytes`
-4. Genera tráfico al API y observa cambios en series temporales.
+4. En Grafana (`http://localhost:3000`), revisa el dashboard provisionado:
+   - `HCM Go Overview`
+5. Genera tráfico al API y observa cambios en paneles y series temporales.
 
-**Qué practicas aquí:** telemetría mínima, lectura de señales runtime y troubleshooting inicial.
+**Qué practicas aquí:** telemetría mínima, lectura de señales runtime y análisis visual en dashboards.
 
 ### Fase 5: Integración continua
 
 1. Haz cambios pequeños en una rama.
 2. Abre PR para disparar el workflow de CI.
-3. Revisa logs de cada etapa y corrige si falla algo.
+3. Revisa logs de cada etapa y corrige si falla algo (incluyendo validación de cobertura).
 
 **Qué practicas aquí:** gobernanza de calidad, trazabilidad de builds y cultura de PR.
 
@@ -237,12 +242,10 @@ Esta sección propone una ruta de práctica realista para entrenar habilidades D
 
 Si quieres llevar la práctica DevOps a un nivel más real:
 
-1. Exigir cobertura mínima en CI.
-2. Versionar y publicar imagen Docker por tag/commit SHA.
-3. Agregar estrategia de release (por ejemplo, tags semánticos).
-4. Añadir Grafana y dashboards.
-5. Incorporar trazas con OpenTelemetry.
-6. Definir alertas operativas y SLOs básicos.
+1. Versionar y publicar imagen Docker por tag/commit SHA.
+2. Agregar estrategia de release (por ejemplo, tags semánticos).
+3. Incorporar trazas con OpenTelemetry.
+4. Definir alertas operativas y SLOs básicos.
 
 ## Licencia
 

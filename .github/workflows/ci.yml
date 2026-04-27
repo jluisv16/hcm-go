@@ -31,7 +31,14 @@ jobs:
         run: go vet ./...
 
       - name: Test
-        run: go test ./...
+        run: go test ./... -coverprofile=coverage.out
+
+      - name: Enforce minimum coverage
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | awk '/^total:/{gsub("%","",$3); print $3}')
+          MIN_COVERAGE=10.0
+          echo "Total coverage: ${COVERAGE}% (minimum: ${MIN_COVERAGE}%)"
+          awk -v c="$COVERAGE" -v m="$MIN_COVERAGE" 'BEGIN { if ((c+0) < (m+0)) { exit 1 } }'
 
       - name: Build
         run: go build ./cmd/api
